@@ -3,8 +3,10 @@
 =Alliance level lottery=
 
 *Outline*
-{{{
-Members of the alliance will send isk to one individual to buy tickets. Tickets are worth 5 million.
-Currently no cap on the amount of tickets one individual can purchase.
 
-}}}
+
+Members of the alliance will send isk to one individual to buy tickets. 
+
+Tickets are worth 5 million.
+
+Currently no cap on the amount of tickets one individual can purchase.
