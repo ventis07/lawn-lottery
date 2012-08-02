@@ -1,13 +1,10 @@
 #summary One-sentence summary of this page.
 
+Test
+
 = Introduction =
 
-Add your content here.
+Alliance level lottery
 
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+*outline*
+Members of the alliance send amount of ISK equivalent to one ticket. 
