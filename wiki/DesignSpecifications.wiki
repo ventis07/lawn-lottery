@@ -1,10 +1,9 @@
-#summary One-sentence summary of this page.
+#Design specifications for Alliance Gnome of the Month lottery.
 
-Test
+=Alliance level lottery=
 
-= Introduction =
+*Outline*
 
-Alliance level lottery
+Members of the alliance will send isk to one individual to buy tickets. Tickets are worth 5 million.
+Currently no cap on the amount of tickets one individual can purchase.
 
-*outline*
-Members of the alliance send amount of ISK equivalent to one ticket. 
