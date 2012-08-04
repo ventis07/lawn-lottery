@@ -11,7 +11,11 @@ Class eveApi{
 		$this->scope="server";
 		$this->page="ServerStatus.xml.aspx ";
 		$this->response=null;
+		$this->api=null;
 		$this->args=array();
+		if(isset($keyID)){$this->args['keyID']=$keyID;}
+		if(isset($vCode)){$this->args['vCode']=$vCode;}
+		if(isset($characterID)){$this->args['characterID']=$characterID;}
 		if(!$this->fetch(2)){
 			$this->response="Eve Api Down";
 			return;
@@ -20,22 +24,31 @@ Class eveApi{
 	}
 	// check for cache and load xml file
 	protected function fetch($cache=true){
-		$hash=hash("md5",$this->keyID.$this->vCode.$this->cID.$this->page);
+		# Special Cache Cases
+		if(isset($this->args['names'])||isset($this->args['ids'])){
+			if(isset($this->args['names']))
+				$char=$this->args['names'];
+			else
+				$char=$this->args['ids'];
+			$hash="charName".$char;
+		}else
+			$hash=hash("md5",$this->keyID.$this->vCode.$this->cID.$this->page);
+			
+		#check if you should cache this page and if it cached
 		if($cache===2)
 			$hash="apiStatus";
 		if($cache&&$this->cacheCheck($hash))
 			$xml=simplexml_load_file(ROOT."/cache/".$hash.".xml");
 		else {
+			#no cached retrieved
 			$url=$this->apiURL."/".$this->scope."/".$this->page;
 			$args=$this->args;
-			$args['keyID']=$this->keyID;
-			$args['vCode']=$this->vCode;
-			if(isset($this->cID))
-				$args['characterID ']=$this->cID;
+			$header="Lawn-Lottery Contact Equto in game or Whinis@gmail.com";
 			$req = curl_init();
 			curl_setopt($req,CURLOPT_URL,$url);
 			curl_setopt($req, CURLOPT_POST, true);
 			curl_setopt($req, CURLOPT_POSTFIELDS, $args);
+			curl_setopt($req, CURLOPT_HEADER, $header);
 			curl_setopt($req, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($req, CURLOPT_TIMEOUT, 30);
 			$xml = curl_exec($req);
@@ -43,7 +56,6 @@ Class eveApi{
 			$http_code = curl_getinfo($req,  CURLINFO_HTTP_CODE);
 			$http_errno = curl_errno($req);
 			curl_close($req);
-
 			if ($http_errno != 0) 
 				return false;
 
@@ -51,12 +63,15 @@ Class eveApi{
 				return false;
 			try {
 				$xml=new SimpleXMLElement($xml,LIBXML_NOCDATA);
+				if(isset($this->args['names'])||isset($this->args['ids']))
+					$xml->cachedUntil="2999-01-01 01:01:01";
 				if($cache)
 					$xml->asXML(ROOT."/cache/".$hash.".xml");
 			} catch (Exception $e) {    // malformed XML
 				$xml=false;
 			}
 		}
+			$this->api=$xml;
 			return $xml;
 	
 	}
