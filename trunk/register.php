@@ -1,13 +1,24 @@
-<?php 
+<?php
+#include basic files
 include_once("include.php");
+
+#store a notice message
 $notice=null;
+
+# check if information sent
 if($_POST){
 	$password = $_POST['password'];
 	$rpassword = $_POST['rpassword'];
 	if($password && $rpassword){
 		if($password == $rpassword){
+			#register user
 			$notice=$db->regUser($password,$_SERVER['HTTP_EVE_CHARNAME'],$_SERVER['HTTP_EVE_CHARID']);
-			echo "<script type=\"text/javascript\">setTimeout(\"window.location = 'login'\",3000);</script>";
+			if($notice===true){
+				$notice="Registered Successfully";
+				#redirect user after 3 seconds
+				echo "<script type=\"text/javascript\">setTimeout(\"window.location = 'login'\",3000);</script>";
+				
+			}
 		}else{
 			$notice = "Your passwords do not match..";
 		}
@@ -33,14 +44,19 @@ label{
 }
 </style>
 </head>
-<?if(!isset($_SERVER['HTTP_EVE_TRUSTED'])){?>
+
+<?
+# Check if ingame if not inform them
+if(!isset($_SERVER['HTTP_EVE_TRUSTED'])){?>
 <div id="container">
 <fieldset>
 <legend>Registration</legend>
 <p>Not Ingame</p>
 </fieldset>
 </div>
-<? }elseif($_SERVER['HTTP_EVE_TRUSTED']!="Yes") { ?>
+<?
+# Check if trusted if not request trust and show waiting page
+ }elseif($_SERVER['HTTP_EVE_TRUSTED']!="Yes") { ?>
 <body onload="CCPEVE.requestTrust('http://*.<?php echo $_SERVER['HTTP_HOST']; ?>');location.reload();">
 <div id="container">
 <fieldset>
@@ -49,11 +65,13 @@ label{
 </fieldset>
 </div>
 <?php
+# Trusted and in game, check if they are allowed
 } else{
 
 $charName = $_SERVER['HTTP_EVE_CHARNAME'];
 $charID = $_SERVER['HTTP_EVE_CHARID'];
 $allowedUsers=array_filter(explode(",",$settings['acceptedManagers']));
+#not allowed display such
 if(!in_array($charID,$allowedUsers)){?>
 <div id="container">
 <fieldset>
@@ -62,6 +80,7 @@ if(!in_array($charID,$allowedUsers)){?>
 </fieldset>
 </div>
 <?}else{
+#allowed display register page
 ?>
 	<div id="container">
 	<p><?echo $notice ?></p>

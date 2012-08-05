@@ -13,7 +13,7 @@ $out->addHTML("
 		color:grey;
 	}
 	#container{
-		width:660px;
+		width:670px;
 		margin:50px auto 0px auto;
 	}
 	label{
@@ -26,12 +26,20 @@ $out->addHTML("
 </style>
 
 ");
-if($settings['finished']){
-	if($_POST){
+$return="<div id=\"container\">
+	<fieldset>
+	<legend>Lottery Settings</legend>";
+if(!$settings['finished']){
+	$return.="<center>Can't Edit Lottery While Running</center>";
+	$disabled="DISABLED";
+}else{
+	$disabled="";
+}
+	if($_POST&&$settings['finished']){
 		if(isset($_POST['allianceName'])&&$_POST['allianceName']){
 			$allianceID=new charID($_POST['allianceName']);
 			$allianceID->parse();
-			if($allianceID->id!=$settings['allianceID'])
+			if(!isset($settings['allianceID'])||($allianceID->id!=$settings['allianceID']))
 				if($allianceID->id)
 					$db->changeSetting("allianceID",$allianceID->id);
 				else
@@ -39,7 +47,7 @@ if($settings['finished']){
 		}elseif(isset($_POST['corporationName'])&&$_POST['corporationName']){
 			$corporationID=new charID($_POST['corporationName']);
 			$corporationID->parse();
-			if($corporationID->id!=$settings['corporationID'])
+			if(!isset($settings['corporationID'])||($corporationID->id!=$settings['corporationID']))
 				if($corporationID->id)
 					$db->changeSetting("corporationID",$corporationID->id);
 				else
@@ -48,52 +56,64 @@ if($settings['finished']){
 		if($_POST['cName']){
 			$cID=new charID($_POST['cName']);
 			$cID->parse();
-			if($cID->id!=$settings['characterID'])
+			if(!isset($settings['characterID'])||($cID->id!=$settings['characterID']))
 				if($cID->id)
 					krumo($db->changeSetting("characterID",$cID->id));
 				else
 					$out->addHTML("Invalid Character Name<br>");
 		}
-		if($_POST['apiK']!=$settings['apiK'])
+		if(!isset($settings['apiK'])||($_POST['apiK']!=$settings['apiK']))
 			$db->changeSetting("apiK",$_POST['apiK']);
-		if($_POST['vCode']!=$settings['vCode'])
+		if(!isset($settings['vCode'])||($_POST['vCode']!=$settings['vCode']))
 			$db->changeSetting("vCode",$_POST['vCode']);
-		if($_POST['verificationType']!=$settings['Mode'])
+		if(!isset($settings['Mode'])||($_POST['verificationType']!=$settings['Mode']))
 			$db->changeSetting("Mode",$_POST['verificationType']);
-		if($_POST['ticketPrice']!=$settings['cost'])
+		if(!isset($settings['cost'])||($_POST['ticketPrice']!=$settings['cost']))
 			$db->changeSetting("cost",$_POST['ticketPrice']);
+		if(!isset($settings['redirect'])||($_POST['redirect']!=$settings['redirect']))
+			$db->changeSetting("redirect",$_POST['redirect']);
+		if(!isset($settings['ticketLimit'])||($_POST['ticketLimit']!=$settings['ticketLimit']))
+			$db->changeSetting("ticketLimit",$_POST['ticketLimit']);
 		$out->addHTML("Settings Saved");
+		$settings=$db->getSettings();
 	}
 	$s1=null;
 	$s2=null;
 	$s3=null;
 	$cName=new charName($settings['characterID']);
 	$cName->parse();
-	$return = <<<HTML
-		<div id="container">
-		<fieldset>
-		<legend>Lottery Settings</legend>
+	$return .= <<<HTML
 		<form method="POST" action="">
 		<label for="ticketPrice">Ticket Price</label>
-		<input type="text" name="ticketPrice" value="{$settings['cost']}"/>
+		<input type="text" name="ticketPrice" value="{$settings['cost']}" {$disabled}/>
 		<br>
 		<label for="apiK">Api Key</label>
-		<input type="text" name="apiK" value="{$settings['apiK']}"/>
+		<input type="text" name="apiK" value="{$settings['apiK']}" {$disabled}/>
 		<br>
 		<label for="vCode">vCode</label>
-		<input id="vCode" type="text" name="vCode" value="{$settings['vCode']}"/>
+		<input id="vCode" type="text" name="vCode" value="{$settings['vCode']}" {$disabled}/>
 		<br>
 		<label for="vCode">Character</label>
-		<input type="text" name="cName" value="{$cName->name}"/>
+		<input type="text" name="cName" value="{$cName->name}" {$disabled}/>
+		<br>
+		<label for="ticketLimit">Ticket Limit</label>
+		<input type="text" name="ticketLimit" value="{$settings['ticketLimit']}" {$disabled}/>
+		<br>
+		(0 for none)
 		<br>
 HTML;
+	if($settings['Mode']>1){
+		$return.="<label for=\"vCode\">Redirect</label>
+		<input type=\"text\" name=\"redirect\" value=\"{$settings['redirect']}\" {$disabled}/>
+		<br>";
+	}
 	if($settings['Mode']==2){
 		$corporationName=new charName($settings['corporationID']);
 		$corporationName->parse();
 		$s2="selected='selected'";
 		$return.=<<<HTML
 		<label for="corporationName">Corporation</label>
-		<input type="text" name="corporationName" value="{$corportionName->name}"/>
+		<input type="text" name="corporationName" value="{$corportionName->name}" {$disabled}/>
 		<br>
 HTML;
 	}elseif($settings['Mode']==3){
@@ -102,7 +122,7 @@ HTML;
 		$s3="selected='selected'";
 		$return.=<<<HTML
 		<label for="allianceName">Alliance</label>
-		<input type="text" name="allianceName" value="{$allianceName->name}"/>
+		<input type="text" name="allianceName" value="{$allianceName->name}" {$disabled}/>
 		<br>
 HTML;
 	}else{
@@ -110,17 +130,18 @@ HTML;
 	}
 	$return.="
 		<label for=\"verificationType\">Verification Type</label>
-		<select name=\"verificationType\">
+		<select name=\"verificationType\" {$disabled}>
 		<option value=1 $s1>None</option>
 		<option value=2 $s2>Corporation</option>
 		<option value=3 $s3>Alliance</option>
 		</select>
 		<br><center>
-		<input type=\"submit\" value=\"Save\" />
-		</center>
-		</form>
-		</fieldset>";
-	$return.="<fieldset>
+	";
+	if($settings['finished'])
+		$return.="<input type=\"submit\" value=\"Save\" />";
+	$return.="</center>
+		</form>";
+	$return.="</fieldset><fieldset>
 		<legend>Allowed Users</legend>";
 	$return.=" <a href='manage.php?addManager'> Add Manager</a><br>";
 	$allowedUsers=array_filter(explode(",",$settings['acceptedManagers']));
@@ -131,9 +152,6 @@ HTML;
 	
 	}
 	$out->addHTML($return."</fieldset></div>");
-}else{
-	$out->addHTML("Can't Edit Lottery While its running");
-}
 $out->echoHTML();
 }
 ?>
