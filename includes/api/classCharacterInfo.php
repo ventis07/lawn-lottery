@@ -5,10 +5,11 @@ Class charInfo extends eveApi {
 		parent::__construct(NULL,NULL,$characterID);
 		$this->scope="eve";
 		$this->page="CharacterInfo.xml.aspx";
+		$this->fetch();
 	}
 	function parse(){
-		$xml=$this->fetch();
-		if(($xml->result)){
+		$xml=$this->api;
+		if($xml->result){
 			$xml=$xml->result;
 			$this->charID=$xml->characterID;
 			$this->charName=$xml->characterName;

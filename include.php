@@ -1,15 +1,18 @@
 <?
+include(".././Krumo/class.krumo.php");
 session_start();
-
 //define needed information
 define("PREFIX","");
-define("TICKET_TABLE",PREFIX."tickets");
-define("LOGIN_TABLE",PREFIX."users");
-define("SETTING_TABLE",PREFIX."settings");
+define("TICKET_TABLE",PREFIX."");
+define("END_TICKET_TABLE",PREFIX."");
+define("LOGIN_TABLE",PREFIX."");
+define("SETTING_TABLE",PREFIX."");
+define("BALANCE_TABLE",PREFIX."");
 define("MYSQL_SERVER","");
 define("MYSQL_USER","");
 define("MYSQL_PASS","");
-define("MYSQL_DB","lottery");
+define("MYSQL_DB","");
+define("DEBUG",false);
 define("ROOT","./");
 set_include_path("includes/");
 
@@ -33,11 +36,12 @@ define("REFID",$settings['lastID']);
 define("apiK",$settings['apiK']);
 define("vCode",$settings['vCode']);
 define("characterID",$settings['characterID']);
-define("DEBUG",$settings['debug']);
 
 //makesure you are still in the database
 if(isset($_SESSION['LOGGED_IN'])&&$_SESSION['LOGGED_IN'])
 	$db->checkUser();
+	
+$lottoNum=$settings['lottoNum'];
 
 
 

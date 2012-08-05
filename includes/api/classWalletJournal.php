@@ -40,7 +40,7 @@ Class walletJournal extends eveApi {
 			$this->response=true;
 			$keysOfTrans=array_keys($transactions);
 			$lastID=end($keysOfTrans);
-			if(REFID!=$lastID)
+			if(REFID!=$lastID&&!$ignoreRefID)
 				$db->changeSetting("lastID",$lastID);
 		}elseif($xml->error){
 			$this->response="[".$xml->error['code']."] ".$xml->error;

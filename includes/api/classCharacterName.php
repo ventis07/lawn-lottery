@@ -6,10 +6,11 @@ Class charName extends eveApi {
 		$this->scope="eve";
 		$this->page="CharacterName.xml.aspx";
 		$this->args=array("ids" => $id);
+		$this->fetch();
 	}
 	function parse(){
-		$xml=$this->fetch();
-		if(($xml->result)){
+		$xml=$this->api;
+		if($xml->result){
 			$xml=$xml->result->rowset->row;
 			$this->name=$xml['name'];
 		}elseif($xml->error){

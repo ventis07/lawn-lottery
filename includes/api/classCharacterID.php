@@ -6,9 +6,10 @@ Class charID extends eveApi {
 		$this->scope="eve";
 		$this->page="CharacterID.xml.aspx";
 		$this->args=array('names'=>$names);
+		$this->fetch();
 	}
 	function parse(){
-		$xml=$this->fetch();
+		$xml=$this->api;
 		if(($xml->result)){
 			$xml=$xml->result->rowset->row;
 			$this->id=$xml['characterID'];
