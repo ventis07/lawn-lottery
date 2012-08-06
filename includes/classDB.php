@@ -45,40 +45,61 @@ class DB {
 	# accepts $refID as reference id for wallet.
 	public function insertTicket($id,$refID){
 		global $settings,$nextTicket;
-		$sql="INSERT INTO ".TICKET_TABLE." (ticketID,charID,refID,lottoNum) VALUES ('".$nextTicket."',".$this->link->real_escape_string($id).",".$this->link->real_escape_string($refID).",".$this->link->real_escape_string($settings['lottoNum']).")";
+		$sql="INSERT INTO ".TICKET_TABLE."  VALUES ('".$nextTicket."',".$this->link->real_escape_string($id).",".$this->link->real_escape_string($refID).",'".$this->link->real_escape_string($settings['lottoName'])."','".$this->link->real_escape_string($settings['lottoNum'])."')";
 		$nextTicket++;
 		return $this->query($sql);
 	}
 	# removed ticket with ticketID $id
 	public function removeTicket($id){
 		global $settings;
-		$sql="DELETE FROM ".TICKET_TABLE." WHERE ticketID=".$this->link->real_escape_string($id)." AND lottoNum=".$this->link->real_escape_string($settings['lottoNum']);
+		$sql="DELETE FROM ".TICKET_TABLE." WHERE ticketID=".$this->link->real_escape_string($id)." AND lottoNum='".$this->link->real_escape_string($settings['lottoNum'])."'";
 		return $this->query($sql);
 	}
 	# gets all tickets for characterID $id
 	# accepted $id as a characterID to search
 	# if $id is 0 returns all tickets
-	public function getTickets($id){
-		global $lottoNum,$settings;
-		if($settings['finished'])
-			$old="old_";
-		else
-			$old=null;
-		if($id==0)
-			$sql="SELECT * FROM ".TICKET_TABLE." WHERE lottoNum=".$this->link->real_escape_string($lottoNum);
-		else
-			$sql="SELECT * FROM ".TICKET_TABLE." WHERE charID=".$this->link->real_escape_string($id)." AND lottoNum=".$this->link->real_escape_string($lottoNum);
+	public function getTickets($id,$all=false){
+		global $lottoNum;
+		if($all){
+			if($id==0)
+				$sql="SELECT * FROM ".TICKET_TABLE;
+			else
+				$sql="SELECT * FROM ".TICKET_TABLE." WHERE charID='".$this->link->real_escape_string($id)."'";
+		}else{
+			if($id==0)
+				$sql="SELECT * FROM ".TICKET_TABLE." WHERE lottoNum='".$this->link->real_escape_string($lottoNum)."'";
+			else
+				$sql="SELECT * FROM ".TICKET_TABLE." WHERE charID='".$this->link->real_escape_string($id)."' AND lottoNum='".$this->link->real_escape_string($lottoNum)."'";
+		}
 		$result=$this->query($sql);
 		$tickets=array();
-		if($result)
+		if($result){
 			$i=1;
 			while($row=$result->fetch_assoc()){
 				$tickets[$i]['id']=$row['ticketID'];
 				$tickets[$i]['cID']=$row['charID'];
 				$tickets[$i]['refID']=$row['refID'];
+				$tickets[$i]['lottoName']=$row['lottoName'];
+				$tickets[$i]['lottoNum']=$row['lottoNum'];
 				$i++;
 			}
+		}
 		return $tickets;
+	}
+	public function getTicketById($id){
+		global $lottoNum;
+		$sql="SELECT * FROM ".TICKET_TABLE." WHERE ticketID='".$this->link->real_escape_string($id)."' AND lottoNum='".$this->link->real_escape_string($lottoNum)."'";
+		$result=$this->query($sql);
+		$tickets=array();
+		if($result){
+			$row=$result->fetch_assoc();
+			$ticket['id']=$row['ticketID'];
+			$ticket['cID']=$row['charID'];
+			$ticket['refID']=$row['refID'];
+			$ticket['lottoName']=$row['lottoName'];
+			$ticket['lottoNum']=$row['lottoNum'];
+		}
+		return $ticket;
 	}
 	#returns all settings as $settings[name]=value
 	public function getSettings(){
@@ -89,21 +110,39 @@ class DB {
 				$settings[$row['Setting']]=$row['Value'];
 		return $settings;
 	}
-	public function getBalance($id){
+	public function getBalance($id,$all=false){
 		global $lottoNum;
-		$sql="SELECT * FROM ".BALANCE_TABLE." WHERE charID='".$this->link->real_escape_string($id)."' AND lottoNum=".$this->link->real_escape_string($lottoNum);
+		if($all)
+			if($id==0)
+				$sql="SELECT * FROM ".BALANCE_TABLE;
+			else
+				$sql="SELECT * FROM ".BALANCE_TABLE." WHERE charID='".$this->link->real_escape_string($id)."'";
+		else
+			if($id==0)
+				$sql="SELECT * FROM ".BALANCE_TABLE." WHERE lottoNum='".$this->link->real_escape_string($lottoNum)."'";
+			else
+				$sql="SELECT * FROM ".BALANCE_TABLE." WHERE charID='".$this->link->real_escape_string($id)."' AND lottoNum='".$this->link->real_escape_string($lottoNum)."'";
 		$result=$this->query($sql);
 		if($result){
-			$balance=$result->fetch_assoc();
-			return $balance['balance'];
+			$i=1;
+			while($row=$result->fetch_assoc()){
+				$balance[$i]=$row['balance'];
+				$i++;
+			}
+			if($i==2){
+				$balance=$balance[1];
+			}
+		}else{
+			$balance=0;
 		}
+		return $balance;
 	}
 	public function updateBalance($id,$balance){
 		global $settings;
-		$sql="UPDATE ".BALANCE_TABLE." SET balance=\"".$this->link->real_escape_string($balance)."\" WHERE charID=\"".$this->link->real_escape_string($id)."\" AND lottoNum=".$this->link->real_escape_string($settings['lottoNum']);
+		$sql="UPDATE ".BALANCE_TABLE." SET balance=\"".$this->link->real_escape_string($balance)."\" WHERE charID=\"".$this->link->real_escape_string($id)."\" AND lottoNum='".$this->link->real_escape_string($settings['lottoNum'])."'";
 		$result=$this->query($sql);
 		if(!$this->link->affected_rows){
-			$sql="INSERT INTO ".BALANCE_TABLE." VALUES('".$this->link->real_escape_string($balance)."','".$this->link->real_escape_string($id)."',".$this->link->real_escape_string($settings['lottoNum']).")";
+			$sql="INSERT INTO ".BALANCE_TABLE." VALUES('".$this->link->real_escape_string($balance)."','".$this->link->real_escape_string($id)."','".$this->link->real_escape_string($settings['lottoName'])."','".$this->link->real_escape_string($settings['lottoNum'])."')";
 			$result=$this->query($sql);
 		}		
 		
@@ -118,8 +157,7 @@ class DB {
 	# accepts $value as value to set $setting to
 	public function changeSetting($setting,$value){
 		global $settings;
-		krumo($settings[$setting]." ".$value);
-		if($settings[$setting]!=$value){
+		if(@$settings[$setting]!=$value){
 			$sql="UPDATE ".SETTING_TABLE." SET Value=\"".$this->link->real_escape_string($value)."\" WHERE Setting=\"".$this->link->real_escape_string($setting)."\"";
 			$result=$this->query($sql);
 			if(!$this->link->affected_rows){
@@ -200,7 +238,7 @@ class DB {
 	private function generateWinner(){
 		global $settings;
 		$rand=mt_rand(1,count($this->getTickets(0)));
-		$sql="SELECT * FROM ".TICKET_TABLE." WHERE ticketID=".$rand." AND lottoNum=".$this->link->real_escape_string($settings['lottoNum']);
+		$sql="SELECT * FROM ".TICKET_TABLE." WHERE ticketID=".$rand." AND lottoNum='".$this->link->real_escape_string($settings['lottoNum'])."'";
 		$result=$this->query($sql);
 		if($result->num_rows){
 			$this->changeSetting("winner",$rand);
@@ -214,12 +252,15 @@ class DB {
 		global $settings,$nextTicket;
 		if(count($this->getTickets(0))){
 			$this->generateWinner();
-			$nextTicket=-1;
-			$this->insertTicket(-1,$settings['winner']);
+			$nextTicket=strtotime($settings['lottoEnd'])*-1;
+			$result=$this->insertTicket(-1,$settings['winner']);
 			if($result)
 				return true;
 			else
 				return false;
+		}else{
+			$this->changeSetting("finished",true);
+			return true;
 		}
 				
 	

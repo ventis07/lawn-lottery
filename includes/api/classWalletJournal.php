@@ -7,11 +7,12 @@ Class walletJournal extends eveApi {
 		$this->page="WalletJournal.xml.aspx";
 		$this->expires=null;
 		$this->transactions=array();
+		$this->fetch();
 	}
 	//call to retrieve XML and convert to array
 	function parse($ignoreRefID=false){
 		global $db,$settings;
-		$xml=$this->fetch();
+		$xml=$this->api;
 		if(($xml->result)){
 			$xml=$xml->result;
 			//cycle through Transactions
