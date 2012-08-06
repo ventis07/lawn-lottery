@@ -59,7 +59,7 @@ $out->addHeader($header);
 if(isset($_GET['endLottery'])){
 	if(isset($_GET['sure'])){
 		if(isset($_GET['reallysure'])){
-			$db->changeSetting("lottoEnd",date("Y-m-d H:i:s",time());
+			$db->changeSetting("lottoEnd",date("Y-m-d H:i:s",time()));
 			header("location:manage.php");
 		}else{
 			$out->addHeader("Are You Really Sure<br>");
