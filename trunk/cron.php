@@ -5,13 +5,15 @@
 #include basic files
 include("include.php");
 
+//varriable to hold next ticket
+$nextTicket=$settings['nextTicket'];
+if($settings['finished']){
+	die ("no lottery running");
+}
+
 #get wallet journal
 $wallet= new walletJournal($settings['apiK'],$settings['vCode'],$settings['characterID']);
 $wallet->parse();
-
-//varriable to hold next ticket
-$nextTicket=$settings['nextTicket'];
-
 # no new tickets, report such
 if(!count($wallet->transactions))
 	echo "No New Tickets";
@@ -19,8 +21,12 @@ if(!count($wallet->transactions))
 else
 foreach($wallet->transactions as $trans){
 	#check for donations
-	if($trans['senderID']!=$settings['characterID'])
-	if($trans['refTypeID']==10){
+	if($trans['refTypeID']==10&&
+		$trans['senderID']!=$settings['characterID']&&
+			(strtotime($trans['date'])<strtotime($settings['lottoEnd'])
+			||$settings['lottoEnd']==0)&&
+		(strtotime($trans['date'])>strtotime($settings['lottoStart'])))
+	{
 		# count tickets
 		$tickets=floor(($trans['amount']/$settings['cost']));
 		
@@ -120,7 +126,6 @@ foreach($wallet->transactions as $trans){
 }
 //stores what the next ticket will be
 $db->changeSetting("nextTicket",$nextTicket);
-
 //checks for tampered tickets
 $wallet->parse(true);
 $tickets=$db->getTickets(0);
@@ -131,5 +136,9 @@ foreach($tickets as $ticket){
 		if($wallet->transactions[$ticket['refID']]['senderID']!=$ticket['cID'])
 			$db->removeTicket($ticket['id']);
 
+}
+if(time()>strtotime($settings['lottoEnd'])&&!$settings['finished']){
+	$db->endLottery();
+	$settings['finished']=true;
 }
 ?>

@@ -38,7 +38,7 @@ Class eveApi{
 		if($cache&&$this->cacheCheck($hash))
 			$xml=simplexml_load_file(ROOT."/cache/".$hash.".xml");
 		else {
-			if(!$_SESSION['apiStatus']&&$this->page!="ServerStatus.xml.aspx "){
+			if(!@$_SESSION['apiStatus']&&$this->page!="ServerStatus.xml.aspx "){
 				$this->api->error="ApiDown";
 				return false;
 			}
