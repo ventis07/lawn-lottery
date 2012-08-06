@@ -1,6 +1,7 @@
 <?
-include(".././Krumo/class.krumo.php");
 session_start();
+date_default_timezone_set ("UTC");
+
 //define needed information
 define("PREFIX","");
 define("TICKET_TABLE",PREFIX."");
@@ -41,7 +42,7 @@ define("characterID",$settings['characterID']);
 if(isset($_SESSION['LOGGED_IN'])&&$_SESSION['LOGGED_IN'])
 	$db->checkUser();
 	
-$lottoNum=$settings['lottoNum'];
+$lottoNum=@$settings['lottoNum'];
 
 
 
