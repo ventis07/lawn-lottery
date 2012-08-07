@@ -16,7 +16,7 @@ $wallet= new walletJournal($settings['apiK'],$settings['vCode'],$settings['chara
 $wallet->parse();
 # no new tickets, report such
 if(!count($wallet->transactions))
-	echo "No New Tickets";
+	echo "No New Tickets<br>";
 #Else cycle the tickets
 else
 foreach($wallet->transactions as $trans){
@@ -139,6 +139,7 @@ foreach($tickets as $ticket){
 }
 if(time()>strtotime($settings['lottoEnd'])&&!$settings['finished']){
 	$db->endLottery();
+	echo "Ending Lotto";
 	$settings['finished']=true;
 }
 ?>

@@ -46,7 +46,7 @@ $out->addHTML("
 # header for admin pages
 $header="<img height=\"64px\" width=\"64px\" src=\"http://image.eveonline.com/character/{$_SESSION['cID']}_64.jpg\" title=\"{$_SESSION['cName']}\"/> {$_SESSION['cName']}";
 $header.="<a href='editLottery'>Edit Lottery</a> ";
-if($settings['finished']){
+if(@$settings['finished']){
 	$header.="<a href='?startLottery'>Start New Lottery</a>";
 }else
 	$header.="<a href='?endLottery'>Roll for Winner</a>";
@@ -98,7 +98,7 @@ if(isset($_GET['endLottery'])){
 		$cID=new charID($_POST['name']);
 		$cID->parse();
 		if($cID->id){
-			$allowedUsers=$settings['acceptedManagers'].",".$cID->id;
+			$allowedUsers=@$settings['acceptedManagers'].",".$cID->id;
 			$db->changeSetting("acceptedManagers",$allowedUsers);
 			header("location: editLottery.php");
 		}	
@@ -117,7 +117,7 @@ $out->echoHTML(true);
 #remove a user from the lotto
 }elseif(isset($_GET['removeUser'])){
 	$db->removeUser($_GET['removeUser']);
-	$allowedUsers=array_filter(explode(",",$settings['acceptedManagers']));
+	$allowedUsers=array_filter(explode(",",@$settings['acceptedManagers']));
 	$i=0;
 	while($allowedUsers[$i]!=$_GET['removeUser']){
 		$i++;
@@ -165,9 +165,9 @@ $out->echoHTML(true);
 	if(@$_GET['lottoNum']){
 		$lottoNum=$_GET['lottoNum'];
 		$config=$db->getTickets(-1);
-		$settings['winner']=$config[1]['refID'];
-		$settings['lottoName']=$config[1]['lottoName'];
-		$settings['finished']=true;
+		@$settings['winner']=$config[1]['refID'];
+		@$settings['lottoName']=$config[1]['lottoName'];
+		@$settings['finished']=true;
 	}
 
 	#get tickets
@@ -186,7 +186,7 @@ $out->echoHTML(true);
 	if($tickets){
 		
 		#calculate isk
-		$totalIsk=number_format(($settings['finished']?count($tickets)-1:count($tickets))*$settings['cost']);
+		$totalIsk=number_format((@$settings['finished']?count($tickets)-1:count($tickets))*@$settings['cost']);
 		$ticketsBought=null;
 		
 		#cycle through tickets
@@ -217,13 +217,13 @@ $out->echoHTML(true);
 					foreach($charTickets as $charTicket){
 						
 						#check if they are the winner
-						if($settings['winner']==$charTicket['id']){
+						if(@$settings['winner']==$charTicket['id']){
 							$ticketText.="<b>".$charTicket['id']."</b>";
 							if(isset($_SERVER['HTTP_EVE_TRUSTED'])){
-								$winner="\n<a href='manage' onclick=\"CCPEVE.showInfo(1377, ".$ticket['cID'].")\";return false;>".$char->name."</a> Won with ticket ".$settings['winner'];
+								$winner="\n<a href='manage' onclick=\"CCPEVE.showInfo(1377, ".$ticket['cID'].")\";return false;>".$char->name."</a> Won with ticket ".@$settings['winner'];
 								$winner.="<br> \n<a href='manage' onclick=\"CCPEVE.sendMail(".$ticket['cID'].",'Lawn Lottery Winner',' ');return false;\">Send ".$char->name." A  EVEMail</a><br><br><br>";
 							}else{
-								$winner="\n".$char->name." Won with ticket ".$settings['winner']."<br><br>";
+								$winner="\n".$char->name." Won with ticket ".@$settings['winner']."<br><br>";
 							}
 						}else
 							$ticketText.=$charTicket['id'];
@@ -245,16 +245,17 @@ $out->echoHTML(true);
 			}
 		}
 		$html.=$ticketsBought;
-		$average.=($settings['finished']?count($tickets)-1:count($tickets))/$characterCount;
+		$average.=(@$settings['finished']?count($tickets)-1:count($tickets))/$characterCount;
 	}else{
 		$average="No Average";
 		$html.="\nNo Tickets Purcahsed";
 	}
-	if($settings['finished']||$settings['lottoNum']!=$lottoNum)
+	if(@$settings['finished']||@$settings['lottoNum']!=$lottoNum)
 		$ended="Completed";
 	else
 		$ended="Current";
-	$out->addHTML(@$notice."{$ended} Lotto: {$settings['lottoName']}<br>".($settings['finished']?count($tickets)-1:count($tickets))." Tickets Purchased<br> {$totalIsk} ISK Raised<br><br>".$winner.$average."<br><br>Tickets<br>".$html);
+	$lottoName=@$settings['lottoName'];
+	$out->addHTML(@$notice."{$ended} Lotto: {$lottoName}<br>".(@$settings['finished']?count($tickets)-1:count($tickets))." Tickets Purchased<br> {$totalIsk} ISK Raised<br><br>".$winner.$average."<br><br>Tickets<br>".$html);
 	}
 $out->echoHTML();	
 

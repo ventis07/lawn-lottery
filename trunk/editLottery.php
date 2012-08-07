@@ -60,7 +60,7 @@ $return="<div id=\"container\">
 	<fieldset>
 	<legend>Lottery Settings</legend>";
 #make sure lotto isn't running
-if(!$settings['finished']){
+if(!@$settings['finished']){
 	$return.="<center>Can't Edit Lottery While Running</center>";
 	$disabled="DISABLED";
 }else{
@@ -69,7 +69,7 @@ if(!$settings['finished']){
 # if settings changed continue
 	if($_POST){
 		#check if lotto is ended
-		if($settings['finished']){
+		if(@$settings['finished']){
 			# has alliance information changed
 			if(isset($_POST['allianceName'])&&$_POST['allianceName']){
 				$allianceID=new charID($_POST['allianceName']);
@@ -95,7 +95,7 @@ if(!$settings['finished']){
 				$cID->parse();
 				if(!isset($settings['characterID'])||($cID->id!=$settings['characterID']))
 					if($cID->id)
-						krumo($db->changeSetting("characterID",$cID->id));
+						$db->changeSetting("characterID",$cID->id);
 					else
 						$out->addHTML("Invalid Character Name<br>");
 			}
@@ -118,7 +118,7 @@ if(!$settings['finished']){
 		if(!isset($settings['lottoEnd'])||(date("Y-m-d H:i:s",strtotime("+ ".$_POST['lottoEnd']." days"))!=$settings['lottoEnd'])){
 			if($_POST['lottoEnd']===0)
 				$db->changeSetting("lottoEnd",$_POST['lottoEnd']);
-			elseif(floor((strtotime($settings['lottoEnd'])-time())/86400)!=$_POST['lottoEnd'])
+			elseif(floor((strtotime(@$settings['lottoEnd'])-time())/86400)!=$_POST['lottoEnd'])
 				$db->changeSetting("lottoEnd",date("Y-m-d H:i:s",strtotime("+ ".$_POST['lottoEnd']." days")));
 		}
 		#out put message and reload settings
@@ -130,18 +130,18 @@ if(!$settings['finished']){
 	$s2=null;
 	$s3=null;
 	# get holding characters name
-	$cName=new charName($settings['characterID']);
+	$cName=new charName(@$settings['characterID']);
 	$cName->parse();
 	
 	#calculate lotto end time
 	if(@$settings['lottoEnd'])
-		$lottoEnd=floor((strtotime($settings['lottoEnd'])-time())/86400);
+		$lottoEnd=floor((strtotime(@$settings['lottoEnd'])-time())/86400);
 	else
 		$lottoEnd=0;
 	$allianceName="";
 	$corportionName=null;
-	if($settings['Mode']==2){
-		$corporationName=new charName($settings['corporationID']);
+	if(@$settings['Mode']==2){
+		$corporationName=new charName(@$settings['corporationID']);
 		$corporationName->parse();
 		$corportionName=$corportionName->name;
 		$s2="selected='selected'";
@@ -149,8 +149,8 @@ if(!$settings['finished']){
 		
 HTML;
 	# check if alliance verification
-	}elseif($settings['Mode']==3){
-		$allianceName=new charName($settings['allianceID']);
+	}elseif(@$settings['Mode']==3){
+		$allianceName=new charName(@$settings['allianceID']);
 		$allianceName->parse();
 		$allianceName=$allianceName->name;
 		$s3="selected='selected'";

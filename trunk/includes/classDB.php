@@ -23,7 +23,7 @@ class DB {
 		$mysqli=$this->link;
         $result=mysqli_query($mysqli,$sql);
         if ($mysqli->error) {
-			if($settings['Debug']){
+			if(@$settings['Debug']){
 				echo "QUERY: '$sql'\n\n<br><br>" . $mysqli->error."<br><br>\n\nBacktrace:\n<br>";
 				debug_print_backtrace();
 				return false;
@@ -105,6 +105,7 @@ class DB {
 	public function getSettings(){
 		$sql="SELECT * FROM ".SETTING_TABLE;
 		$result=$this->query($sql);
+		$settings=array();
 		if($result)
 			while($row=$result->fetch_assoc())
 				$settings[$row['Setting']]=$row['Value'];

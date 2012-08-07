@@ -11,7 +11,7 @@ $out->addHTML('
 		padding-left:auto;
 		padding-right:auto;
 		display:block;
-		width:30%;
+		width:55%;
 	}
 	#left{
 		position: absolute;
@@ -40,8 +40,16 @@ $out->addHTML('
 	}
 	#textan, #equto, #paikau {
 		display:inline-block;
-		width:250px;
+		width:200px;
 		font-size:2.2em;
+		text-align:center;
+	
+	}
+	#textanTitle, #equtoTitle, #paikauTitle {
+		display:inline-block;
+		width:200px;
+		font-size:1.4em;
+		color:purple;
 		text-align:center;
 	
 	}
@@ -61,6 +69,16 @@ $out->addHTML('
 		
 		width:600px;
 		margin:50px auto 0px auto;
+	}
+	#about	{
+		display:block;
+		margin-left: auto;
+		margin-right: auto;
+		text-align:center;
+		width: 50em;
+	}
+	#pullTimer{
+		font-size:70%;
 	}
 	</style>
 	');
@@ -92,11 +110,11 @@ if(!isset($_SERVER['HTTP_EVE_TRUSTED'])){?>
 	$denied=true;
 	
 	# check the mode and see if they need to be authenticated
-	if($settings['Mode']==2){
-		if($_SERVER['HTTP_EVE_CORPID']==$settings['corporationID'])
+	if(@$settings['Mode']==2){
+		if($_SERVER['HTTP_EVE_CORPID']==@$settings['corporationID'])
 			$denied=false;
-	}elseif($settings['Mode']==3){
-		if($_SERVER['HTTP_EVE_ALLIANCEID']==$settings['allianceID'])
+	}elseif(@$settings['Mode']==3){
+		if($_SERVER['HTTP_EVE_ALLIANCEID']==@$settings['allianceID'])
 			$denied=false;
 	}else
 		$denied=false;
@@ -117,14 +135,14 @@ if(!isset($_SERVER['HTTP_EVE_TRUSTED'])){?>
 		
 		#contain ticket window
 		
-		$out->addHTML("<center id=\"title\">".$settings['lottoName']."</center>
+		$out->addHTML("<center id=\"title\">".@$settings['lottoName']."</center>
 		<div id=\"container\"><fieldset><legend>Ticket Viewer</legend>");
 		
 		#if tickets parse them
 		if($tickets)
 		foreach($tickets as $ticket){
 			#see if lottery is finished and if user is a winner
-			if($settings['winner']==$ticket['id']&&$settings['finished']){
+			if(@$settings['winner']==$ticket['id']&&@$settings['finished']){
 				$winner=true;
 			}
 			
@@ -137,14 +155,14 @@ if(!isset($_SERVER['HTTP_EVE_TRUSTED'])){?>
 			$i++;
 		}
 		# if lottery finished display if winner or not
-		if($settings['finished']&&$settings['winner'])
+		if(@$settings['finished']&&@$settings['winner'])
 			if($winner)
-				$out->addHtml("<p>You won with ticket ".$settings['winner']."</p>");
+				$out->addHtml("<p>You won with ticket ".@$settings['winner']."</p>");
 			else{
-				$ticket=$db->getTicketById($settings['winner']);
+				$ticket=$db->getTicketById(@$settings['winner']);
 				$char= new charName($ticket['cID']);
 				$char->parse();
-				$out->addHTML("<center>".$char->name." has won with Ticket ".$settings['winner']."</center>");
+				$out->addHTML("<center>".$char->name." has won with Ticket ".@$settings['winner']."</center>");
 			}
 		
 		# check if more than one ticket
@@ -169,33 +187,60 @@ if(!isset($_SERVER['HTTP_EVE_TRUSTED'])){?>
 		header("location:{$settings['redirect']}");
 	
 	#send out buffer
-	$char= new charName($settings['characterID']);
+	$char= new charName(@$settings['characterID']);
 	$char->parse();
-	$out->addHTML("<center>Send Isk To <a href='index' onclick=\"CCPEVE.showInfo(1377, ".$settings['characterID'].")\";return false;>".$char->name."</a></center>");
+	$out->addHTML("<center>Send Isk To <a href='index' onclick=\"CCPEVE.showInfo(1377, ".@$settings['characterID'].");return false;\">".$char->name."</a></center>");
 	$out->addHTML('<a id="center" href="index"><img src="back.jpg" alt="Back to Main Page" /></a>');
 		
 }elseif(isset($_GET['instruction'])){
-
+	$char= new charName(@$settings['characterID']);
+	$char->parse();
+	$out->addHTML('
+	<p>How to participate in the lottery</p>
+	<br>
+	<p>Ticket Cost: '.number_format(@$settings['cost'],2).'<br>
+	Send isk to: <a href="?instruction" onclick="CCPEVE.showInfo(1377, '.@$settings["characterID"].');return false;">'.$char->name.'</a></p>
+	<br>
+	<p>All isk must be sent to Lawn Lotto in multiples of '.number_format(@$settings['cost'],2).' for your tickets to be correctly applied
+	That means if you send '.number_format(@$settings['cost']*2,2).' isk you will recieve 2 Tickets. However, if you send in '.number_format((@$settings['cost']*2)-0.01,2).' isk
+	and 0.01 isk you will only recieve 1 Ticket. Even though your Total isk sent in is '.number_format(@$settings['cost']*2,2).'. This is because of the way we track tickets.</p>
+	');
 	$out->addHTML('<a id="center" href="index"><img src="back.jpg" alt="Back to Main Page" /></a>');
 }elseif(isset($_GET['contact'])){
 	$out->addHTML('
-		<div id="equto">
-			<img height="128px" width="128px" src="http://image.eveonline.com/character/688546564_128.jpg" title="Equto"/><br>
-			<a href="?about" onclick="CCPEVE.showInfo(1377,688546564);return false;">Equto</a>
-		</div>
-		<div id="textan">
-			<img height="128px" width="128px" src="http://image.eveonline.com/character/1650854497_128.jpg" title="Textan"/><br>
-			<a href="?about" onclick="CCPEVE.showInfo(1377,1650854497);return false;">Textan</a>
-		</div>
-		<div id="paikau">
-			<img height="128px" width="128px" src="http://image.eveonline.com/character/1998881408_128.jpg" title="Paikau"/><br>
-			<a href="?about" onclick="CCPEVE.showInfo(1377,1998881408);return false;"> Paikau</a>
+		<div id="about">
+			<div id="equto">
+				<img height="128px" width="128px" src="http://image.eveonline.com/character/688546564_128.jpg" title="Equto"/><br>
+				<a href="?about" onclick="CCPEVE.showInfo(1377,688546564);return false;">Equto</a>
+			</div>
+			<div id="textan">
+				<img height="128px" width="128px" src="http://image.eveonline.com/character/1650854497_128.jpg" title="Textan"/><br>
+				<a href="?about" onclick="CCPEVE.showInfo(1377,1650854497);return false;">Textan</a>
+			</div>
+			<div id="paikau">
+				<img height="128px" width="128px" src="http://image.eveonline.com/character/1998881408_128.jpg" title="Paikau"/><br>
+				<a href="?about" onclick="CCPEVE.showInfo(1377,1998881408);return false;"> Paikau</a>
+			</div>
+			<br>
+			<div id="equtoTitle">
+				Bug Creator
+			</div>
+			<div id="textanTitle">
+				Your Favorite Canadian
+			</div>
+			<div id="paikauTitle">
+				The Pocket Protector
+			</div>
 		</div>
 	');
 	$out->addHTML('<a id="center" href="index"><img src="back.jpg" alt="Back to Main Page" /></a>');
 }else{
+	if((int)(date("m",time())>30))
+		$nextPull=strtotime((date("H",time())+1).":00");
+	else
+		$nextPull=strtotime((date("H",time())).":30");
 	$out->addHTML('
-	<img id="centerImg" src="title.png"/>
+	<center id="pullTimer"> 1 hour until next api pull </center>
 	<img id="centerImg" src="gnome.jpg"/>
 	');
 	$out->addHTML('
@@ -237,34 +282,55 @@ if(!isset($_SERVER['HTTP_EVE_TRUSTED'])){?>
 				var t=setTimeout("update_time("+time+")",1000);
 			}
 		}
+		function update_pull(time){
+			min="";
+			sec="";
+			output="";
+			D=new Date().getTime()/1000;
+			trainingTime=time-D;
+			mins = Math.floor(trainingTime/60);
+			secs = Math.floor(trainingTime-(mins*60));
+			if (mins>0&&output!="") output +=", "
+			if (mins ==1)  output += mins +" minute"; else
+			if (mins > 1)  output += mins +" minutes";
+			
+			if(trainingTime<=0){
+				document.location="index";
+			}else{
+				document.getElementById("pullTimer").innerHTML=output+" Until Next Api Pull";
+				var t=setTimeout("update_pull("+time+")",1000);
+			}
+		}
+		update_pull('.$nextPull.');
 		</script>');
-	if($settings['finished']){
-		$ticket=$db->getTicketById($settings['winner']);
+	if(@$settings['finished']){
+		$ticket=$db->getTicketById(@$settings['winner']);
 		$char= new charName($ticket['cID']);
 		$char->parse();
 		$out->addHTML("<center id='current'>Current Status: Completed</center>");
-		$out->addHTML("<center style='color:green;'>Congratulations! ".$char->name." has won with Ticket ".$settings['winner']."</center>");
-	}elseif(!$settings['finished']&&(floor((strtotime($settings['lottoEnd'])-time())/86400))>0){
+		if(@$settings['winner'])
+			$out->addHTML("<center style='color:green;'>Congratulations! ".$char->name." has won with Ticket ".@$settings['winner']."</center>");
+	}elseif(!@$settings['finished']&&(floor((strtotime(@$settings['lottoEnd'])-time())/86400))>0){
 		$out->addHTML("<center id='current'>Current Status: Running</center>");
-		$out->addHTML("<center id=\"countdown\">".(floor((strtotime($settings['lottoEnd'])-time())/86400))." Day Remaining</center>");
-	}elseif(!$settings['finished']&&(floor((strtotime($settings['lottoEnd'])-time())/3600))>0){
+		$out->addHTML("<center id=\"countdown\">".(floor((strtotime(@$settings['lottoEnd'])-time())/86400))." Day Remaining</center>");
+	}elseif(!@$settings['finished']&&(floor((strtotime(@$settings['lottoEnd'])-time())/3600))>0){
 		$out->addHTML("<center id='current'>Current Status: Running</center>");
-		$out->addHTML("<center id=\"countdown\" style='color:red;'>".(floor((strtotime($settings['lottoEnd'])-time())/3600))." Hour Remaining</center>");
-	}elseif(!$settings['finished']&&(floor((strtotime($settings['lottoEnd'])-time())/60))>0){
+		$out->addHTML("<center id=\"countdown\" style='color:red;'>".(floor((strtotime(@$settings['lottoEnd'])-time())/3600))." Hour Remaining</center>");
+	}elseif(!@$settings['finished']&&(floor((strtotime(@$settings['lottoEnd'])-time())/60))>0){
 		$out->addHTML("<center id='current'>Current Status: Running</center>");
-		$out->addHTML("<center id=\"countdown\" style='color:red;'>".(floor((strtotime($settings['lottoEnd'])-time())/60))." Minute Remaining</center>");
-	}elseif((!$settings['finished']&&(floor((strtotime($settings['lottoEnd'])-time())/3600))<0)||$settings['finished']){
+		$out->addHTML("<center id=\"countdown\" style='color:red;'>".(floor((strtotime(@$settings['lottoEnd'])-time())/60))." Minute Remaining</center>");
+	}elseif((!@$settings['finished']&&(floor((strtotime(@$settings['lottoEnd'])-time())/3600))<0)||@$settings['finished']){
 		$out->addHTML("<center id='current'>Current Status: <div style=\"display:inline; color:red;\"> Completed</div></center>");
 		$out->addHTML("<center style=\"color:yellow;\">Awaiting Dice Roll</center>");
 	}
 	$out->addHTML("
-	<script type='text/javascript'>update_time(".(strtotime($settings['lottoEnd'])).")</script>
-	<center>".($settings['finished']?count($db->getTickets(0))-1:count($db->getTickets(0)))." Tickets Sold</center>");
+	<script type='text/javascript'>update_time(".(strtotime(@$settings['lottoEnd'])).")</script>
+	<center>".(@$settings['finished']?count($db->getTickets(0))-1:count($db->getTickets(0)))." Tickets Sold</center>");
 
 	$out->addHTML('<div>
-	<a id="left" href="index.php?instruction"><img src="instruct.jpg" alt="Instructions" /></a>
-	<a id="center" href="index.php?tickets"><img src="view.jpg" alt="View Your Tickets" /></a>
-	<a id="right" href="index.php?contact"><img src="contact.jpg" alt="Contact Us" /></a>
+	<a id="left" href="?instruction"><img src="instruct.jpg" alt="Instructions" /></a>
+	<a id="center" href="?tickets"><img src="view.jpg" alt="View Your Tickets" /></a>
+	<a id="right" href="?contact"><img src="contact.jpg" alt="Contact Us" /></a>
 	</div>
 	');
 
