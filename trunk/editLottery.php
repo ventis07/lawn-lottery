@@ -104,8 +104,8 @@ if(!@$settings['finished']){
 				$db->changeSetting("apiK",$_POST['apiK']);
 			if(!isset($settings['vCode'])||($_POST['vCode']!=$settings['vCode']))
 				$db->changeSetting("vCode",$_POST['vCode']);
-			if(!isset($settings['Mode'])||($_POST['verificationType']!=$settings['Mode']))
-				$db->changeSetting("Mode",$_POST['verificationType']);
+			if(!isset($settings['vType'])||($_POST['vType']!=$settings['Mode']))
+				$db->changeSetting("vType",$_POST['vType']);
 			if(!isset($settings['cost'])||($_POST['ticketPrice']!=$settings['cost']))
 				$db->changeSetting("cost",$_POST['ticketPrice']);
 			}
@@ -197,18 +197,18 @@ HTML;
 		<br>
 		</div>
 HTML;
-	$return.=<<<HTML
-		<script type="text/javascript">showFields();</script>
-HTML;
 	$return.="
-		<label for=\"verificationType\">Verification Type</label>
-		<select name=\"verificationType\" onchange=\"showFields();\" {$disabled}>
+		<label for=\"vType\">Verification Type</label>
+		<select id= \"vType\" name=\"vType\" onchange=\"showFields();\" {$disabled}>
 		<option value=1 $s1>None</option>
 		<option value=2 $s2>Corporation</option>
 		<option value=3 $s3>Alliance</option>
 		</select>
 		<br><center>
 	";
+		$return.=<<<HTML
+		<script type="text/javascript">showFields();</script>
+HTML;
 	$return.="<input type=\"submit\" value=\"Save\" />";
 	$return.="</center>
 		</form>";

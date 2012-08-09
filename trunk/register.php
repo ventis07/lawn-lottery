@@ -12,7 +12,7 @@ if($_POST){
 	if($password && $rpassword){
 		if($password == $rpassword){
 			#register user
-			$notice=$db->regUser($password,$_SERVER['HTTP_EVE_CHARNAME'],$_SERVER['HTTP_EVE_CHARID']);
+			$notice=$db->regUser($password,$_POST['username'],$_SERVER['HTTP_EVE_CHARID']);
 			if($notice===true){
 				$notice="Registered Successfully";
 				#redirect user after 3 seconds

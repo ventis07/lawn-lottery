@@ -2,10 +2,11 @@
 class DB {
 
 	 public function __construct() {
+		if(!MYSQL_SERVER)
+			die("Not Yet Installed");
 		$mysqli=new mysqli(MYSQL_SERVER, MYSQL_USER, MYSQL_PASS, MYSQL_DB);
-        
-        if ($mysqli->connect_errno) {
-            echo ('Could not connect to mysql'.$mysqli->connect_error);
+        if (mysqli_connect_error()) {
+            die ('Could not connect to mysql'.mysqli_connect_error());
         }
 		$this->link=$mysqli;
 		$this->lastID="NULL";
