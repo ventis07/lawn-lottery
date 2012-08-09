@@ -5,6 +5,7 @@
 #include basic files
 include("include.php");
 
+echo date("Y-m-d H:i:s",time())."<br>\n";
 //varriable to hold next ticket
 $nextTicket=$settings['nextTicket'];
 if($settings['finished']){
@@ -16,7 +17,7 @@ $wallet= new walletJournal($settings['apiK'],$settings['vCode'],$settings['chara
 $wallet->parse();
 # no new tickets, report such
 if(!count($wallet->transactions))
-	echo "No New Tickets<br>";
+	echo "No New Tickets<br>\n";
 #Else cycle the tickets
 else
 foreach($wallet->transactions as $trans){

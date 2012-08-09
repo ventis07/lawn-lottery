@@ -60,15 +60,15 @@ if(isset($_GET['endLottery'])){
 	if(isset($_GET['sure'])){
 		if(isset($_GET['reallysure'])){
 			$db->changeSetting("lottoEnd",date("Y-m-d H:i:s",time()));
-			header("location:manage.php");
+			header("location:manage");
 		}else{
-			$out->addHeader("Are You Really Sure<br>");
-			$out->addHeader("<a style='width:40px; margin-right:40px;padding-right:40px' href='manage.php'>No<a/><a href='manage.php?endLottery&sure&reallysure'>Yes<a/>");
+			$out->addHTML("Are You Really Sure<br>");
+			$out->addHTML("<a style='width:40px; margin-right:40px;padding-right:40px' href='manage'>No<a/><a href='manage?endLottery&sure&reallysure'>Yes<a/>");
 		
 		}
 	}else{
-		$out->addHeader("Are You Sure<br>");
-		$out->addHeader("<a style='width:40px; margin-right:40px;padding-right:40px' href='manage.php?endLottery&sure'>Yes<a/><a href='manage.php'>No<a/>");
+		$out->addHTML("Are You Sure<br>");
+		$out->addHTML("<a style='width:40px; margin-right:40px;padding-right:40px' href='manage?endLottery&sure'>Yes<a/><a href='manage'>No<a/>");
 	}
 # check if starting a lotto
 }elseif(isset($_GET['startLottery'])){
@@ -97,10 +97,10 @@ if(isset($_GET['endLottery'])){
 	if($_POST){
 		$cID=new charID($_POST['name']);
 		$cID->parse();
-		if($cID->id){
+		if($cID->id!==0){
 			$allowedUsers=@$settings['acceptedManagers'].",".$cID->id;
 			$db->changeSetting("acceptedManagers",$allowedUsers);
-			header("location: editLottery.php");
+			header("location: editLottery");
 		}	
 	}else{
 		$return = <<<HTML
@@ -250,9 +250,11 @@ $out->echoHTML(true);
 		$average="No Average";
 		$html.="\nNo Tickets Purcahsed";
 	}
-	if(@$settings['finished']||@$settings['lottoNum']!=$lottoNum)
+	if((@$settings['finished']||@$settings['lottoNum']!=$lottoNum)||(time()>strtotime($settings['lottoEnd']))){
 		$ended="Completed";
-	else
+		if(!$winner)
+			$winner=" Awaiting Dice Roll<br>";
+	}else
 		$ended="Current";
 	$lottoName=@$settings['lottoName'];
 	$out->addHTML(@$notice."{$ended} Lotto: {$lottoName}<br>".(@$settings['finished']?count($tickets)-1:count($tickets))." Tickets Purchased<br> {$totalIsk} ISK Raised<br><br>".$winner.$average."<br><br>Tickets<br>".$html);
