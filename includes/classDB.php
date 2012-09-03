@@ -2,11 +2,9 @@
 class DB {
 
 	 public function __construct() {
-		if(!MYSQL_SERVER)
-			die("Not Yet Installed");
 		$mysqli=new mysqli(MYSQL_SERVER, MYSQL_USER, MYSQL_PASS, MYSQL_DB);
         if (mysqli_connect_error()) {
-            die ('Could not connect to mysql'.mysqli_connect_error());
+            $out->addBox('Could not connect to mysql'.mysqli_connect_error(),"error");
         }
 		$this->link=$mysqli;
 		$this->lastID="NULL";
@@ -20,23 +18,22 @@ class DB {
     }
 	# runs mysqli query #query
     private function query($sql) {
-		global $settings;
+		global $out;
 		$mysqli=$this->link;
         $result=mysqli_query($mysqli,$sql);
         if ($mysqli->error) {
-			if(@$settings['Debug']){
-				echo "QUERY: '$sql'\n\n<br><br>" . $mysqli->error."<br><br>\n\nBacktrace:\n<br>";
-				debug_print_backtrace();
-				return false;
+			if(DEBUG){
+				$out->addBox("QUERY: '$sql'\n\n<br><br>" . $mysqli->error,"error");
 			}else
-				return "Mysql Error";
+				$out->addBox("Mysql Error","error");
+				return false;
         }
         
         if (is_bool($result)) {
             return $result;
         }
         
-        if ($result->num_rows===NULL) {
+        if ($result->num_rows===0) {
             return null;
         }
         return $result;
@@ -214,7 +211,7 @@ class DB {
 		global $settings;
 		$sql="SELECT * FROM ".LOGIN_TABLE." WHERE username='".$this->link->real_escape_string($user)."' AND password='".$this->link->real_escape_string(md5($pass))."'";
 		$result=$this->query($sql);
-		if($result->num_rows){
+		if($result){
 			$char=$result->fetch_assoc();
 			$cID=new charID($char['charID']);
 			$cID->parse();

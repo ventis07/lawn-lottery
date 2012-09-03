@@ -1,5 +1,12 @@
 <?include("include.php");
 
+#session variables
+$vars['url']="http".((@$_SERVER["HTTPS"])?"s":"")."://".$_SERVER["SERVER_NAME"];
+$_SESSION['url']=$vars['url']."/";
+
+#admin variables
+$vars['login']=@$_SESSION['LOGGED_IN'];
+
 #calculate important variables
 $minute=(int)date("i",time());
 if($minute>=30){
@@ -11,7 +18,10 @@ if($minute>=30){
 $vars['nextPull']=$nextPull;
 
 #get settings such as lotto status, name and winner information
-if(@$settings['finished']){
+if(@$settings['hide']){
+	$vars['statusText']="No Lottery Running";
+	$vars['status']=0;
+}elseif(@$settings['finished']){
 	$vars['statusText']="Completed";
 	$vars['status']=3;
 	if(@$settings['winner']){
@@ -26,7 +36,7 @@ if(@$settings['finished']){
 	$vars['statusText']="Running";
 	$vars['status']=1;
 }elseif(!@$settings['finished']&&(time()-strtotime(@$settings['lottoEnd']))>0){
-	$vars['statusText']="Awaiting dice Roll";
+	$vars['statusText']="Awaiting Dice Roll";
 	$vars['status']=2;
 }
 $vars['lottoName']=@$settings['lottoName'];
@@ -48,7 +58,7 @@ if(@$settings['lottoEnd']=0){
 }elseif(!@$settings['finished']&&(floor((strtotime(@$settings['lottoEnd'])-time())/3600))>0){
 	$var['lottoEndText']=(floor((strtotime(@$settings['lottoEnd'])-time())/3600))." Hours Remaining";
 }elseif(!@$settings['finished']&&(floor((strtotime(@$settings['lottoEnd'])-time())/60))>0){
-	$var['lottoEndText']=(floor((strtotime(@$settings['lottoEnd'])-time())/60))." Minutes Remaining";
+	$var['lottoEndText']='<div style="color:red; display:inline;">'.(floor((strtotime(@$settings['lottoEnd'])-time())/60))." Minutes Remaining</div>";
 }elseif((!@$settings['finished']&&(floor((strtotime(@$settings['lottoEnd'])-time())/3600))<0)||@$settings['finished']){
 	$var['lottoEndText']="Complete";
 }
@@ -86,6 +96,22 @@ $vars['characterTicketText']=null;
 $vars['characterTicketCount']=null;
 $vars['characterID']=@$_SERVER['HTTP_EVE_CHARID'];
 if($vars['trusted']){
+		#check if redirect is enabled and if you should be redirected	
+		$denied=true;
+
+		# check the mode and see if they need to be authenticated
+		if(@$settings['vType']==2){
+			if($_SERVER['HTTP_EVE_CORPID']==@$settings['corporationID'])
+				$denied=false;
+		}elseif(@$settings['vType']==3){
+			if($_SERVER['HTTP_EVE_ALLIANCEID']==@$settings['allianceID'])
+				$denied=false;
+		}else
+			$denied=false;
+		# if authenticate or skipped continue to display
+		if($denied!==false){
+			header("location:{$settings['redirect']}");
+		}
 	#get tickets for current character
 		$tickets=$db->getTickets($vars['characterID']);
 		
@@ -102,6 +128,7 @@ if($vars['trusted']){
 				$ticketText.=$ticket['id'];
 				
 				#add comma if not last ticket
+				$i=0;
 				if($i<$ticketCount)
 					$ticketText.=", ";
 				$i++;
@@ -110,25 +137,8 @@ if($vars['trusted']){
 			if(strlen($ticketText)>70)
 				$ticketText=wordwrap($ticketText, 40, "<br/>\n");
 		}
-		$vars['characterTicketText']=$ticketText;
-		$vars['characterTicketCount']=$ticketCount;
-		
-	#check if redirect is enabled and if you should be redirected	
-	$denied=true;
-
-	# check the mode and see if they need to be authenticated
-	if(@$settings['vType']==2){
-		if($_SERVER['HTTP_EVE_CORPID']==@$settings['corporationID'])
-			$denied=false;
-	}elseif(@$settings['vType']==3){
-		if($_SERVER['HTTP_EVE_ALLIANCEID']==@$settings['allianceID'])
-			$denied=false;
-	}else
-		$denied=false;
-	# if authenticate or skipped continue to display
-	if($denied!==false){
-		//header("location:{$settings['redirect']}");
-	}
+		$vars['ticketText']=$ticketText;
+		$vars['ticketCount']=$ticketCount;
 }
 	
 #output information
@@ -146,22 +156,14 @@ $out->addStyle('
 		width:55%;
 	}
 	#left{
-		position: absolute;
-		bottom: 25px;
-		left: 0px;
-	}
-	#center{
-		text-align:center;
-		display:block;
-		position: absolute;
-		bottom: 25px;
-		right: 40%;
-		left: 40%;
+		position: relative;
+		display:inline-block;
+		float:left;
 	}
 	#right{
-		position: absolute;
-		bottom: 25px;
-		right: 0px;
+		position: relative;
+		display:inline-block;
+		float:right;
 	}
 	a{
 		color:red;
@@ -212,7 +214,29 @@ $out->addStyle('
 	#pullTimer{
 		font-size:70%;
 	}
-');
+	#body{
+		min-height:100%;
+		position:relative;
+		padding:10px;
+		padding-bottom:60px;   /* Height of the footer */
+	
+	}
+	.push{
+		height:40em;
+	}
+	html, body {height: 100%;}
+
+	#wrap {min-height: 100%;}
+
+	#main {overflow:auto;
+		padding-bottom: 120px;}  /* must be same height as the footer */
+
+	#footer {position: relative;
+		text-align:center;
+		margin-top: -80px; /* negative value of footer height */
+		height: 80px;
+		clear:both;} 
+	');
 
 #add javscript
 $out->addJavascript('
@@ -243,11 +267,11 @@ $out->addJavascript('
 					if (secs ==1)  output += secs +" second"; else
 					if (secs > 1)  output += secs +" seconds";
 				}
-				
-				if(trainingTime<=0){
-					document.getElementById("countdown").innerHTML="Awaiting Dice Roll";
-					document.getElementById("countdown").style.color="yellow";
-					document.getElementById("status").innerHTML="Current Status: <div style=\"display:inline; color:red;\"> Completed</div>";
+				if(trainingTime<=600)
+					document.getElementById("countdown").style.color="red";
+				if(trainingTime<=1){
+					document.getElementById("countdown").style.display="none";
+					document.getElementById("status").innerHTML="<div style=\"display:inline; color:red;\"> Awaiting Dice Roll</div>";
 				}else{
 					document.getElementById("countdown").innerHTML=output+" Remaining";
 					var t=setTimeout("update_time("+time+")",1000);
@@ -269,8 +293,8 @@ $out->addJavascript('
 					if (secs > 1)  output += secs +" seconds";
 				}
 				
-				if(trainingTime<=0){
-					document.location="index";
+				if(trainingTime<=1){
+					document.location="/";
 				}else{
 					document.getElementById("pullTimer").innerHTML=output+" Until Next Api Pull";
 					var t=setTimeout("update_pull("+time+")",1000);
@@ -278,6 +302,6 @@ $out->addJavascript('
 			}
 ');
 
-$out->useTemplate('index.tpl');
+$out->useTemplate('templates/index.tpl');
 $out->echoHTML();
 ?>

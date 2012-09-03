@@ -29,7 +29,7 @@ foreach($wallet->transactions as $trans){
 		(strtotime($trans['date'])>strtotime($settings['lottoStart'])))
 	{
 		# count tickets
-		$tickets=floor(($trans['amount']/$settings['cost']));
+		$tickets=floor(($trans['amount']/$settings['ticketPrice']));
 		
 		#get donator information
 		$char= new charInfo((int)$trans['senderID']);
@@ -44,7 +44,7 @@ foreach($wallet->transactions as $trans){
 			$tickets=$settings['ticketLimit']-count($charTickets);
 		
 		#check for alliance authentication
-		if($settings['Mode']==3){
+		if($settings['vType']==3){
 			#check if donator is in alliance
 			if($char->allianceID==$settings['allianceID'])
 			
@@ -70,7 +70,7 @@ foreach($wallet->transactions as $trans){
 					$tickets--;
 				}
 		#check for corp authentication	
-		}elseif($settings['Mode']==2){
+		}elseif($settings['vType']==2){
 			#check if donator is in corp
 			if($char->corpID==$settings['corporationID'])
 			
@@ -97,7 +97,7 @@ foreach($wallet->transactions as $trans){
 					$tickets--;
 				}
 		#check for no authentication	
-		}elseif($settings['Mode']==1){
+		}elseif($settings['vType']==1){
 		
 			# update balance
 			$result=$db->updateBalance($trans['senderID'],$charBalance);
@@ -143,4 +143,5 @@ if(time()>strtotime($settings['lottoEnd'])&&!$settings['finished']){
 	echo "Ending Lotto";
 	$settings['finished']=true;
 }
+$db->close();
 ?>
