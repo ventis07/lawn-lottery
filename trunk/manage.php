@@ -1,51 +1,24 @@
 <?
 include("include.php");
 
+
+if(isset($_GET['logout'])){
+	session_destroy();
+	header("location:".@$_SESSION['url']);
+}
 #check if logged in
 if(!$_SESSION['LOGGED_IN'])
 	header("location: login.php");
+$_SESSION['url']="http".((@$_SERVER["HTTPS"])?"s":"")."://".$_SERVER["SERVER_NAME"]."/manage";
 
-#style info
-$out->addHTML("
-	<style>
-		#character{
-			width:120px;
-			float:left;
-			display:block;
-		}
-		#balance {
-			width:150px;
-			float:left;
-			display:block;
-		}
-		#lottoName{
-			display:inline;
-			margin-left:10px;
-			margin-right:30px:
-			padding-left:10px;
-			padding-right:30px;
-		
-		}
-		a{
-			margin-left:10px;
-			margin-right:10px:
-			padding-left:10px;
-			padding-right:10px;
-		}
-		#stats{
-			display:inline-block;
-			text-align:center;
-			margin-left:10px;
-			margin-right:10px:
-			padding-left:10px;
-			padding-right:10px;
-		}
-	</style>");	
-	
-	
+$vars['get']=@$_GET;
 # header for admin pages
 $header="<img height=\"64px\" width=\"64px\" src=\"http://image.eveonline.com/character/{$_SESSION['cID']}_64.jpg\" title=\"{$_SESSION['cName']}\"/> {$_SESSION['cName']}";
 $header.="<a href='editLottery'>Edit Lottery</a> ";
+if(!@$settings['hide'])
+	$header.="<a href='?hide'>Close to Public</a> ";
+else
+	$header.="<a href='?show'>Open to Public</a> ";
 if(@$settings['finished']){
 	$header.="<a href='?startLottery'>Start New Lottery</a>";
 }else
@@ -54,21 +27,18 @@ if($_GET||isset($_GET['lottoNum']))
 	$header.="<a href='manage'>Back</a> ";
 else
 	$header.="<a href='?pastLotto'>View Past lotteries</a> ";
+$header.="<a href='/'>Lotto Main Page</a> ";
+$header.="<a href='?logout'>Logout</a> ";
 $out->addHeader($header);
+
+
+
+
 # check if ending lotto, verify twice
 if(isset($_GET['endLottery'])){
-	if(isset($_GET['sure'])){
-		if(isset($_GET['reallysure'])){
-			$db->changeSetting("lottoEnd",date("Y-m-d H:i:s",time()));
-			header("location:manage");
-		}else{
-			$out->addHTML("Are You Really Sure<br>");
-			$out->addHTML("<a style='width:40px; margin-right:40px;padding-right:40px' href='manage'>No<a/><a href='manage?endLottery&sure&reallysure'>Yes<a/>");
-		
-		}
-	}else{
-		$out->addHTML("Are You Sure<br>");
-		$out->addHTML("<a style='width:40px; margin-right:40px;padding-right:40px' href='manage?endLottery&sure'>Yes<a/><a href='manage'>No<a/>");
+	if(isset($_GET['reallysure'])&&isset($_GET['sure'])){
+		$db->changeSetting("lottoEnd",date("Y-m-d H:i:s",time()));
+		header("location:manage");
 	}
 # check if starting a lotto
 }elseif(isset($_GET['startLottery'])){
@@ -81,16 +51,8 @@ if(isset($_GET['endLottery'])){
 		$db->changeSetting("lottoStart",date("Y-m-d H:i:s",time()));
 		$db->changeSetting("lottoNum",$lottoNum+1);
 		$db->changeSetting("lottoName",$lottoName);
+		$db->changeSetting("hide",false);
 		header("location:manage");
-	}else{
-		$out->addHeader('<form method="POST" action="manage.php?startLottery">
-			<label for="lottoName">Lottery Name</label>
-		<input type="text" name="lottoName" />
-		<label for="lottoEnd">Lottery Length</label>
-		<input type="text" name="lottoEnd" value="30"/>
-		<br>
-		<input type="submit" value="Create Lotto" />
-		</form>');
 	}
 #add a manager to the lotto
 }elseif(isset($_REQUEST['addManager'])){
@@ -102,18 +64,7 @@ if(isset($_GET['endLottery'])){
 			$db->changeSetting("acceptedManagers",$allowedUsers);
 			header("location: editLottery");
 		}	
-	}else{
-		$return = <<<HTML
-	<form method="POST" action="manage">
-	<label for="name">Manager Name</label>
-	<input type="text" name="name"/>
-	<input type="hidden" name="addManager"/>
-	<input type="submit" value="Submit" />
-	</form>
-HTML;
-	$out->addHTML($return);
 	}
-$out->echoHTML(true);	
 #remove a user from the lotto
 }elseif(isset($_GET['removeUser'])){
 	$db->removeUser($_GET['removeUser']);
@@ -129,37 +80,39 @@ $out->echoHTML(true);
 		$db->changeSetting("acceptedManagers",implode(",",$allowedUsers));
 	}
 	header("location: editLottery.php");
-	
+}elseif(isset($_GET['hide'])){
+	$db->changeSetting("hide",true);
+	header("location:manage");
+}elseif(isset($_GET['show'])){
+	$db->changeSetting("hide",false);
+	header("location:manage");	
 #view past lotteries
-}elseif(isset($_GET['pastLotto'])){
-	$past=$db->getTickets(-1,true);
+}elseif(isset($_GET['pastLotto'])){$past=$db->getTickets(-1,true);
 	if($past){
 		#get stats for all lottos
 		$tickets=$db->getTickets(0,true);
 		$charactersRan=array();
-		$totalUsers=0;
-		$totalTickets=0;
+		$vars['totalUsers']=0;
+		$vars['totalTickets']=0;
 		foreach($tickets as $ticket){
 			if($ticket['id']>0)
-				$totalTickets++;
+				$vars['totalTickets']++;
 			if(!array_key_exists($ticket['cID'],$charactersRan)&&$ticket['id']>0){
 				$charactersRan[$ticket['cID']]=$ticket['cID'];
-				$totalUsers++;
+				$vars['totalUsers']++;
 			}
 		}
 		$balances=$db->getBalance(0,true);
-		$totalBalance=(float)0;
+		$vars['totalBalance']=(float)0;
 		foreach($balances as $balance){
-			$totalBalance+=(float)$balance;
+			$vars['totalBalance']+=(float)$balance;
 		}
-		$out->addHTML('<div id="stats">Total Isk<br>'.number_format($totalBalance,2).'</div><div id="stats">Unique User<br>'.number_format($totalUsers).'</div><div id="stats">Total Tickets<br>'.number_format($totalTickets).'</div><br><br>');
 		foreach($past as $lotto){
-			$lottoNum=$lotto['lottoNum'];
-			$ticketCount=count($db->getTickets(0))-1;
-			$out->addHTML("# ".$lotto['lottoNum']."<div id='lottoName'>".$lotto['lottoName']."</div> End Date: ".date("Y-m-d",$lotto['id']*-1)."  Tickets Sold: ".$ticketCount."   <a href='manage.php?lottoNum=".$lotto['lottoNum']."'> View Lotto</a><br>");
-		}
-	}else
-		$out->addHTML("No Past Lotteries");
+			$vars['lottos'][$lotto['lottoNum']]['pastLottoNum']=$lotto['lottoNum'];
+			$vars['lottos'][$lotto['lottoNum']]['pastTicketCount']=count($db->getTickets(0))-1;
+			$vars['lottos'][$lotto['lottoNum']]['pastLottoEndDate']=date("Y-m-d",$lotto['id']*-1);
+			}
+	}
 }elseif(@$_GET['lottoNum']||!$_GET){
 		# check if looking at past lotto, set variables
 	if(@$_GET['lottoNum']){
@@ -169,26 +122,38 @@ $out->echoHTML(true);
 		@$settings['lottoName']=$config[1]['lottoName'];
 		@$settings['finished']=true;
 	}
-
+	#check lotto status
+	if(@$settings['hide']){
+		$vars['status']=0;
+	}elseif(@$settings['finished']){
+		$vars['status']=3;
+		if(@$settings['winner']){
+			$ticket=$db->getTicketById(@$settings['winner']);
+			$char= new charName($ticket['cID']);
+			$char->parse();
+			$vars['winnerName']=$char->name;
+			$vars['winnerTicket']=$settings['winner'];
+			$vars['winnerID']=$ticket['cID'];
+		}
+	}elseif((time()-strtotime(@$settings['lottoEnd']))<0){
+		$vars['status']=1;
+	}elseif(!@$settings['finished']&&(time()-strtotime(@$settings['lottoEnd']))>0){
+		$vars['status']=2;
+	}
+	$vars['lottoName']=@$settings['lottoName'];
 	#get tickets
 	$tickets=$db->getTickets(0);
 
 	#Set variables
 	$charactersRan=array();
-	$ticketText=null;
-	$html=null;
-	$totalIsk=0;
-	$winner=null;
-	$characterCount=0;
-	$average="Average tickets bought ";
-	
+	$vars['characterCount']=0;
+	$vars['ticketsSold']=(@$settings['finished']?count($tickets)-1:count($tickets));
 	#check if there are any tickets
 	if($tickets){
 		
 		#calculate isk
-		$totalIsk=number_format((@$settings['finished']?count($tickets)-1:count($tickets))*@$settings['cost']);
-		$ticketsBought=null;
-		
+		$vars['totalIsk']=$vars['ticketsSold']*@$settings['ticketPrice'];
+		$vars['characterCount']=0;
 		#cycle through tickets
 		foreach($tickets as $ticket){
 			#check if character already has tickets if so skip
@@ -197,7 +162,6 @@ $out->echoHTML(true);
 				#get character name 
 				$char= new charName($ticket['cID']);
 				$char->parse();
-				
 				#set as having tickets
 				$charactersRan[$ticket['cID']]=$ticket['cID'];
 		
@@ -208,57 +172,39 @@ $out->echoHTML(true);
 				if($charTickets){
 					
 					#add to number of people who bout tickets
-					$characterCount++;
-					$ticketCount=count($charTickets);
+					$vars['characterCount']++;
+					$vars['characters'][$ticket['cID']]['ticketCount']=count($charTickets);
 					$i=1;
-					$s=null;
-					
+					$vars['characters'][$ticket['cID']]['ticketText']=null;
 					#cycle through character tickets
 					foreach($charTickets as $charTicket){
-						
-						#check if they are the winner
-						if(@$settings['winner']==$charTicket['id']){
-							$ticketText.="<b>".$charTicket['id']."</b>";
-							if(isset($_SERVER['HTTP_EVE_TRUSTED'])){
-								$winner="\n<a href='manage' onclick=\"CCPEVE.showInfo(1377, ".$ticket['cID'].")\";return false;>".$char->name."</a> Won with ticket ".@$settings['winner'];
-								$winner.="<br> \n<a href='manage' onclick=\"CCPEVE.sendMail(".$ticket['cID'].",'Lawn Lottery Winner',' ');return false;\">Send ".$char->name." A  EVEMail</a><br><br><br>";
-							}else{
-								$winner="\n".$char->name." Won with ticket ".@$settings['winner']."<br><br>";
-							}
-						}else
-							$ticketText.=$charTicket['id'];
-						
+						$vars['characters'][$ticket['cID']]['ticketText'].=$charTicket['id'];
 						#add commas
-						if($i<$ticketCount&&$ticketCount>1)
-							$ticketText.=", ";
+						if($i<$vars['characters'][$ticket['cID']]['ticketCount']&&$vars['characters'][$ticket['cID']]['ticketCount']>1)
+							$vars['characters'][$ticket['cID']]['ticketText'].=", ";
 						$i++;
 					}
 				}
 				#add s for multiple tickets
-				if($ticketCount>1)
-					$s="s";
-				if(strlen($ticketText)>70)
-					$ticketText=wordwrap($ticketText, 70, "<br/>\n<div id=\"character\">&nbsp;</div><div id=\"balance\">&nbsp;</div>");
-				$balance=number_format($db->getBalance($ticket['cID']));
-				$ticketsBought.="\n<div id=\"character\">{$char->name}</div><div id=\"balance\">Balance: {$balance}</div> Purchased ticket{$s} {$ticketText} <br>";
-				$ticketText=null;
+				if(strlen($vars['characters'][$ticket['cID']]['ticketText'])>130)
+					$vars['characters'][$ticket['cID']]['ticketText']=wordwrap($vars['characters'][$ticket['cID']]['ticketText'], 130, "<br/>\n<div id=\"break\">&nbsp;</div>");
+				$vars['characters'][$ticket['cID']]['charName']=$char->name;
+				$vars['characters'][$ticket['cID']]['balance']=$db->getBalance($ticket['cID']);
 			}
 		}
-		$html.=$ticketsBought;
-		$average.=(@$settings['finished']?count($tickets)-1:count($tickets))/$characterCount;
-	}else{
-		$average="No Average";
-		$html.="\nNo Tickets Purcahsed";
+		$vars['adminCut']=($vars['totalIsk']*.1)/3;
+		$vars['average']=$vars['ticketsSold']/$vars['characterCount'];
 	}
-	if((@$settings['finished']||@$settings['lottoNum']!=$lottoNum)||(time()>strtotime($settings['lottoEnd']))){
-		$ended="Completed";
-		if(!$winner)
-			$winner=" Awaiting Dice Roll<br>";
-	}else
-		$ended="Current";
-	$lottoName=@$settings['lottoName'];
-	$out->addHTML(@$notice."{$ended} Lotto: {$lottoName}<br>".(@$settings['finished']?count($tickets)-1:count($tickets))." Tickets Purchased<br> {$totalIsk} ISK Raised<br><br>".$winner.$average."<br><br>Tickets<br>".$html);
-	}
-$out->echoHTML();	
+}
+$out->useTemplate('templates/manage.tpl');
+if(isset($past))
+	foreach($vars['lottos'] as $vars)
+		$out->useTemplate('templates/pastLotto.tpl');
+else
+	foreach($vars['characters'] as $vars)
+		$out->useTemplate('templates/ticketList.tpl');
 
+$out->echoHTML();
+	
+$db->close();
 ?>

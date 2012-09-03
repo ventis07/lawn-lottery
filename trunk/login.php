@@ -4,7 +4,7 @@ if($_POST)
 	if($db->loginUser($_POST['password'],$_POST['username'])){
 		$_SESSION['LOGGED_IN']=true;
 		$notice="Login Successful";
-		header("location: manage.php");
+		header("location:".@$_SESSION['url']);
 	}else{
 		$_SESSION['LOGGED_IN']=false;
 		$notice="Invalid Username or Password";

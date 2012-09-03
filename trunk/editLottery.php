@@ -106,8 +106,8 @@ if(!@$settings['finished']){
 				$db->changeSetting("vCode",$_POST['vCode']);
 			if(!isset($settings['vType'])||($_POST['vType']!=$settings['Mode']))
 				$db->changeSetting("vType",$_POST['vType']);
-			if(!isset($settings['cost'])||($_POST['ticketPrice']!=$settings['cost']))
-				$db->changeSetting("cost",$_POST['ticketPrice']);
+			if(!isset($settings['ticketPrice'])||($_POST['ticketPrice']!=$settings['cost']))
+				$db->changeSetting("ticketPrice",$_POST['ticketPrice']);
 			}
 		# settings that can be changes while lotto is in progress
 		if(!isset($settings['redirect'])||($_POST['redirect']!=$settings['redirect']))
@@ -160,7 +160,7 @@ HTML;
 	$return .= <<<HTML
 		<form method="POST" action="">
 		<label for="ticketPrice">Ticket Price</label>
-		<input type="text" name="ticketPrice" value="{$settings['cost']}" {$disabled}/>
+		<input type="text" name="ticketPrice" value="{$settings['ticketPrice']}" {$disabled}/>
 		<br>
 		<label for="apiK">Api Key</label>
 		<input type="text" name="apiK" value="{$settings['apiK']}" {$disabled}/>

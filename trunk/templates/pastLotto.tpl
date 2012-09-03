@@ -1,0 +1,1 @@
+"# {$pastLottoNum}<div id='lottoName'>{$pastLottoName}</div> End Date: {$pastLottEndDate}  Tickets Sold: {$pastTicketCount}   <a href='manage.php?lottoNum={$pastLottoNum}'> View Lotto</a><br>
